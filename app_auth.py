@@ -13,7 +13,6 @@ from ultralytics import YOLO
 import numpy as np
 from PIL import Image
 
-
 import torch
 import torch.nn as nn
 import torchvision
@@ -29,7 +28,6 @@ FOLDER_ID = '11qHfwdlJBcRgeFS09qkNP36iO5-YN1V6'
 
 creds = service_account.Credentials.from_service_account_file(CREDENTIALS_JSON_FILE, scopes=['https://www.googleapis.com/auth/drive'])
 service = build('drive', 'v3', credentials=creds)
-
 
 font = cv2.FONT_HERSHEY_SIMPLEX
 
@@ -51,7 +49,6 @@ class_dict_new = {0 : "safe driving",
               6 : "drinking",
               7 : "reaching behind"}
 
-
 transform = transforms.Compose([transforms.Resize((400, 400)),
                            transforms.RandomRotation(10),
                            transforms.ToTensor(),
@@ -65,13 +62,9 @@ def get_model():
     model.load_state_dict(torch.load("weights/model-driver_7cat_final", map_location=torch.device('cpu')))
     model.eval()
     model.to('cpu')
-
     return model
 
-
-
 model_resnet = get_model()
-
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Change this to a strong secret key
@@ -101,7 +94,6 @@ def list_folders(folder_id=FOLDER_ID):
     ).execute()
 
     folders = results.get('files', [])
-
     folders_data = []
     if folders:
         for folder in folders:
@@ -109,23 +101,14 @@ def list_folders(folder_id=FOLDER_ID):
             folders_data.append({"folder_id": folder['id'], "folder_name": folder_name})
     else:
         print("No folders found in the specified folder.")
-
     return folders_data
 
 def list_videos(folder_id):
-    # Initialize the Google Drive API
-
-    # Set the folder ID of the Google Drive folder containing your videos
-
     # List videos in the specified Google Drive folder
     results = service.files().list(q=f"'{folder_id}' in parents", fields="files(id, name)").execute()
     files = results.get('files', [])
-
-
-
     list_files = []
     for file in files:
-
         file_info = service.files().get(fileId=file['id'], fields='thumbnailLink').execute()
         thumbnail_link = file_info['thumbnailLink']
 
@@ -135,23 +118,14 @@ def list_videos(folder_id):
 
 def get_all_vid_from_folders():
     folders = list_folders(FOLDER_ID)
-
     names_videos_dict = {}
-
-
     all_ids = []
+
     for folder in folders:
         folder_id = folder['folder_id']
-
         vids = list_videos(folder_id)
-
         all_ids.append({'name': folder['folder_name'], "driver_vids": vids})
-
     return all_ids
-
-    
-
-
 
 def generate_video_previews():
     video_previews = []
@@ -181,7 +155,6 @@ def process_video(video_path):
 
     while True:
         ret, frame = cap.read()
-
         if not ret:
             break
 
@@ -230,7 +203,6 @@ def video_ml(video_name):
 
 @app.route('/video')
 def video():
-
     all_vid = get_all_vid_from_folders()
     folders = list_folders()
     # print(names_videos_dict)
@@ -288,9 +260,7 @@ def register():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-        # Create a thread for capturing video
+    # Create and start a thread for capturing video
     # capture_thread = threading.Thread(target=capture_video)
-
-    # Start the capture thread
     # capture_thread.start()
     app.run(debug=True)
