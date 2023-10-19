@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Video Previews</title>
+    <link rel="stylesheet"  type="text/css" href="{{url_for('static', filename='css/style.css')}}">
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header__inner">
+                <div class="header__left">
+                    <div class="logo header__logo">
+                      <a href="{{ url_for('video') }}">
+                        <img src="{{url_for('static', filename='images/logo.svg')}}" width="50px" height="50px" alt="Drive safe" class="logo__img" />
+                      </a>
+                        <p class="logo__txt drivesafe">DriveSafe</p>
+                    </div>
+                    <div class="header__title">
+                        Адміністративна панель
+                    </div>
+                </div>
+                <div class="header__right">
+                    <div class="header__logout">
+                        Вийти
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <section class="main">
+        <div class="main-wrapper">
+            <div class="main__left">
+                <div class="active-drivers">
+                    <h2 class="active-drivers__title">
+                        Активні водії
+                    </h2>
+                    <div class="active-drivers__wrapper">
+                        {% for folder in folders %}
+                        <div class="active-drivers__item">
+                            <div class="active-drivers__item-name">
+                                <a href="{{ url_for('video_driver', id=folder['folder_id']) }}"> {{ folder['folder_name'] }} </a>
+                            </div>
+                            <div class="active-drivers__item-btn">-</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="main__right">
+                {% for driver in all_vid %}
+                <div class="driver-block main__driver-block">
+                    <h2 class="driver-block__driver-name">
+                        {{ driver['name'] }}
+                    </h2>
+                    <div class="driver-block__cameras">
+                        {% for video in driver['driver_vids'] %}
+                        <div class="driver-block__camera">
+                            <a href="{{ url_for('video_feed', video_path=video['video_path']) }}">
+                                <img class="preview-image" src="{{ video['preview_image'] }}" alt="Preview">
+                            </a>
+                        </div>
+                        {% endfor %}
+
+                    </div>
+                    <div class="driver-block__messages">
+                        <p class="error">>[19.10.23: 19:52:10]: Відволікання: ймовірність 0.72 - користування телефоном, 0.52 - випивання</p>
+                        <p class="normal">>[19.10.23: 19:52:15]: Нормальне водіння </p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+</body>
+</html>
+

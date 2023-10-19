@@ -1,0 +1,207 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  padding: 0;
+  margin: 0;
+}
+h1, h2, h3, h4, h5, h6, p {
+  margin: 0;
+  padding: 0;
+}
+/* Define color variables */
+:root {
+  --primary-color: #007bff;
+  --secondary-color: #6c757d;
+  --background-color: #f8f9fa;
+  --border-color: #ced4da;
+  --white-color: #fff;
+  --background-light: #EDF0F3;
+  --background-dark: #063D78;
+  --border-radius: 4px;
+  --error-color: #E44141;
+  --right-color: #1EB51B;
+}
+
+body {
+  font-family: 'Lato', sans-serif;
+  color: var(--primary-color);
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.section-title {
+  color: var(--primary-color);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  background-color: var(--primary-color); /* Primary color, you can use your variable here */
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-size: 14px;
+  font-weight: bold;
+  letter-spacing: 0.01em;
+}
+
+.custom-upload-button:hover {
+  background-color: #0056b3;
+}
+
+.drivesafe {
+  color: var(--primary-color);
+  font-weight: bold;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+}
+.logo__txt {
+  margin-left: 10px;
+}
+
+.header {
+  padding: 20px 0;
+  background-color: var(--background-light);
+  font-weight: bold;
+}
+.header__inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.header__left {
+    display: flex;
+    align-items: center;
+}
+.header__logo {
+
+}
+.header__title {
+    margin-left: 40px;
+    font-size: 14px;
+}
+.header__right {
+
+}
+.header__logout {
+    cursor: pointer;
+}
+
+/* Authorisation */
+.authorisation {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    text-align: center;
+}
+.authorisation__title {
+    margin-bottom: 30px;
+    max-width: 300px;
+    text-align: center;
+}
+.authorisation__input {
+    padding: 10px;
+    margin-top: 10px;
+    border: 1px solid var(--primary-color);
+    border-radius: var(--border-radius);
+
+}
+.authorisation__button {
+    margin-top: 10px;
+    width: 100%;
+}
+
+/* Main */
+.main-wrapper {
+    display: flex;
+}
+.main__left {
+    width: 250px;
+    background-color: var(--background-dark);
+    color: var(--white-color);
+    padding-top: 30px;
+    padding: 20px;
+    min-height: 100vh;
+}
+.main__right {
+    padding: 20px;
+    width: calc(100% - 250px);
+}
+.main__driver-block {
+    margin-top: 20px;
+}
+
+.active-drivers {
+
+}
+.active-drivers__item {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--white-color);
+}
+.active-drivers__item-name {
+}
+.active-drivers__item-name a {
+    color: inherit;
+    text-decoration: none;
+}
+.active-drivers__item-btn {
+    font-size: 40px;
+    font-weight: 700;
+}
+
+.driver-block__cameras {
+    margin-top: 20px;
+    display: flex;
+    gap: 20px;
+}
+.driver-block__messages {
+    margin-top: 10px;
+    padding: 10px;
+    color: var(--background-dark);
+    border: 1px solid var(--border-color);
+    font-size: 12px;
+    border-radius: var(--border-radius);
+}
+.driver-block__messages > .normal {
+    color: var(--right-color);
+}
+.driver-block__messages > .error {
+    color: var(--error-color);
+}
+
+/* Video */
+
+.video-block {
+    display: inline-block;
+    margin: 20px;
+    text-align: center;
+}
+.video-title {
+    font-weight: bold;
+}
+.preview-image {
+    max-width: 320px;
+    max-height: 240px;
+}
+.buttonimg{
+    width:auto;
+    height:auto;
+}

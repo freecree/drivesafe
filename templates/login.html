@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Авторизація</title>
+    <link rel="stylesheet"  type="text/css" href="{{url_for('static', filename='css/style.css')}}">
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <section class="authorisation">
+        <h1 class="authorisation__title">Авторизація в системі Drive Safe</h1>
+        <form method="post">
+            <input class="authorisation__input" type="text"
+             name="username" placeholder="Username" required><br>
+            <input class="authorisation__input" type="password"
+             name="password" placeholder="Password" required><br>
+            <input class="button authorisation__button" type="submit" value="Увійти">
+        </form>
+    </section>
+</body>
+</html>
