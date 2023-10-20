@@ -116,17 +116,6 @@ def list_videos(folder_id):
 
     return list_files
 
-def get_all_vid_from_folders():
-    folders = list_folders(FOLDER_ID)
-    names_videos_dict = {}
-    all_ids = []
-
-    for folder in folders:
-        folder_id = folder['folder_id']
-        vids = list_videos(folder_id)
-        all_ids.append({'name': folder['folder_name'], "driver_vids": vids})
-    return all_ids
-
 def generate_video_previews():
     video_previews = []
     for filename in os.listdir(video_folder):
@@ -143,6 +132,14 @@ def generate_video_previews():
                 video_previews.append({"video_path": filename, "preview_image": preview_image})
     return video_previews
 
+def get_drivers(): 
+    folders = list_folders(FOLDER_ID)
+    drivers = []
+    for folder in folders:
+        folder_id = folder['folder_id']
+        driver_videos = list_videos(folder_id)
+        drivers.append({'name': folder['folder_name'], 'folder_id': folder_id, 'videos': driver_videos})
+    return drivers
 
 def load_video(video_path):
     # Render the video page template with the video path
@@ -200,14 +197,10 @@ def video_ml(video_name):
     return Response(process_video(full_video_path),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
-
 @app.route('/video')
 def video():
-    all_vid = get_all_vid_from_folders()
-    folders = list_folders()
-    # print(names_videos_dict)
-    # drivers = list(set(list(names_videos_dict.values())))
-    return render_template("index.html", folders=folders, driver_name='', all_vid=all_vid, videos=[])
+    drivers = get_drivers()
+    return render_template("index.html", drivers=drivers)
 
 
 
@@ -221,8 +214,6 @@ def video_driver(id):
         if folder['folder_id'] == id:
             name = folder['folder_name']
     return render_template("index.html",folders=folders, all_vid=[], driver_name=name, videos=videos_with_previews)
-
-
 
 
 @app.route('/', methods=['GET', 'POST'])
