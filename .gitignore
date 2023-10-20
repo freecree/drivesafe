@@ -1,2 +1,3 @@
 /static/*.mp4
 distracted_creds.json
+/__pycache__

@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 import os
 import base64
+import json
 
 import cv2
 import os
@@ -20,6 +21,7 @@ from torchvision import models,transforms,datasets
 
 from googleapiclient.discovery import build
 from google.oauth2 import service_account
+from flask_socketio import SocketIO
 
 
 # Set your credentials JSON file path
@@ -67,9 +69,12 @@ def get_model():
 model_resnet = get_model()
 
 app = Flask(__name__)
+socketio = SocketIO(app)
+
 app.secret_key = 'your_secret_key'  # Change this to a strong secret key
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 db = SQLAlchemy(app)
+
 login_manager = LoginManager()
 login_manager.login_view = 'login'
 login_manager.init_app(app)
@@ -139,6 +144,7 @@ def get_drivers():
         folder_id = folder['folder_id']
         driver_videos = list_videos(folder_id)
         drivers.append({'name': folder['folder_name'], 'folder_id': folder_id, 'videos': driver_videos})
+    # print('videos[0]: ', drivers[0]['videos'][0])
     return drivers
 
 def load_video(video_path):
@@ -248,10 +254,28 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html')
 
+@app.route('/test', methods=['GET'])
+def test():
+    print('in test!!')
+    return {"name": "test"}
+
+@socketio.on('ask video')
+def handle_asking_video(data):
+    print('handle aking video: ', data)
+    # socketio.emit('response frame', {'frame': 'some frame', 'video_element': data.video_element})
+    socketio.emit('response frame', {'frame': 'some frame', 'video_id': data['video_id']})
+
+
+# @socketio.on('connect')
+# def handle_connect(data):
+#     print('Socketio: connect: ' + data)
+#     socketio.emit('my response', {'data': 'Connected'})
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     # Create and start a thread for capturing video
     # capture_thread = threading.Thread(target=capture_video)
     # capture_thread.start()
-    app.run(debug=True)
+    # app.run(debug=True)
+    socketio.run(app)
