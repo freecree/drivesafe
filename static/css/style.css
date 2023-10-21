@@ -73,9 +73,12 @@ body {
 }
 
 .header {
-  padding: 20px 0;
+  /* padding: 20px 0; */
   background-color: var(--background-light);
   font-weight: bold;
+  height: 80px;
+  display: flex;
+  align-items: center;
 }
 .header__inner {
     display: flex;
@@ -141,6 +144,8 @@ body {
 .main__right {
     padding: 20px;
     width: calc(100% - 250px);
+    max-height: calc(100vh - 80px);
+    overflow-y: scroll;
 }
 .main__driver-block {
     margin-top: 20px;
@@ -171,6 +176,13 @@ body {
     margin-top: 20px;
     display: flex;
     gap: 20px;
+    flex-wrap: wrap;
+}
+.driver-block__camera > img {
+    width: auto;
+    /* width: 320px; */
+    width: 300px;
+    height: 240px;
 }
 .driver-block__messages {
     margin-top: 10px;
@@ -179,29 +191,12 @@ body {
     border: 1px solid var(--border-color);
     font-size: 12px;
     border-radius: var(--border-radius);
+    max-height: 100px;
+    overflow-y: scroll;
 }
 .driver-block__messages > .normal {
     color: var(--right-color);
 }
 .driver-block__messages > .error {
     color: var(--error-color);
-}
-
-/* Video */
-
-.video-block {
-    display: inline-block;
-    margin: 20px;
-    text-align: center;
-}
-.video-title {
-    font-weight: bold;
-}
-.preview-image {
-    max-width: 320px;
-    max-height: 240px;
-}
-.buttonimg{
-    width:auto;
-    height:auto;
 }

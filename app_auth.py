@@ -137,6 +137,8 @@ def generate_video_previews():
                 preview_image = buffer.tobytes()
                 preview_image = base64.b64encode(preview_image).decode() 
                 video_previews.append({"video_path": filename, "preview_image": preview_image})
+            else:
+                print('Can not load the preview')
     return video_previews
 
 def get_drivers(): 
@@ -152,45 +154,6 @@ def get_drivers():
 def load_video(video_path):
     # Render the video page template with the video path
     return render_template('video_page.html', video_path=video_path)
-
-
-def process_video(video_path):
-    # Initialize the video capture from a webcam or video file
-    cap = cv2.VideoCapture(video_path)  # You can change this to a video file path
-
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
-
-        try:
-            clean_frame = frame
-
-            pixels = np.asarray(clean_frame)
-            im = Image.fromarray(pixels)
-            # roi = cv2.resize(fr, (400, 400))
-            im = transform(im)
-            im = im.unsqueeze(0)
-            output = model_resnet(im.to('cpu'))
-            proba = nn.Softmax(dim=1)(output)
-            proba = [round(float(elem),4) for elem in proba[0]]
-
-            pred = class_dict_new[proba.index(max(proba))]
-
-            cv2.putText(frame, pred, (50, 50), font, 1, (0 ,0, 255), 1)
-            cv2.putText(frame, str(max(proba)), (50, 100), font, 1, (0 ,0, 255), 1)
-
-            # Process the frame here or do any other task
-            # For this example, we'll convert the frame to JPEG format
-            ret, buffer = cv2.imencode('.jpg', frame)
-            if ret:
-                frame = buffer.tobytes()
-                yield (b'--frame\r\n' 
-                       b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n'
-                       b'Content-Type: text/plain\r\n\r\n' + pred.encode() + b'\r\n'
-                       )
-        except:
-            pass
 
 # Route for streaming video to the web browser
 @app.route('/video_feed/<video_path>', methods=['GET',' POST'])
@@ -261,11 +224,6 @@ def test():
     print('in test!!')
     return {"name": "test"}
 
-# @socketio.on('ask video')
-# def handle_asking_video(data):
-#     print('handle aking video: ', data)
-#     # socketio.emit('response frame', {'frame': 'some frame', 'video_element': data.video_element})
-#     socketio.emit('response frame', {'frame': 'some frame', 'video_id': data['video_id']})
 video_states = {}
 
 def get_predictions_output(probabilities):
@@ -290,7 +248,7 @@ def handle_asking_video(data):
     video_states[video_path] = True
     while video_states[video_path]:
         ret, frame = cap.read()
-        time.sleep(3)
+        # time.sleep(3)
         print('read frame')
         print('video states', video_states)
         if not ret:

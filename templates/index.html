@@ -62,9 +62,7 @@
                     <div class="driver-block__cameras">
                         {% for video in driver['videos'] %}
                         <div class="driver-block__camera">
-                            <!-- <a href="{{ url_for('video_feed', video_path=video['video_path']) }}"> -->
-                                <img id="{{video['video_path']}}" class="preview-image" src="{{ video['preview_image'] }}" alt="Preview">
-                            <!-- </a> -->
+                            <img id="{{video['video_path']}}" class="preview-image" src="{{ video['preview_image'] }}" alt="Preview">
                         </div>
                         {% endfor %}
                     </div>
