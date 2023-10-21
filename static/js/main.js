@@ -1,10 +1,6 @@
 const socket = io();
 socket.on('connect', () => {
-    console.log('connected11');
-    socket.emit('my event', {data: 'I\'m connected!'});
-});
-socket.on('my response', data => {
-    console.log('in my response', data);
+    console.log('connected to server');
 });
 
 function isOpen(target) {
@@ -13,35 +9,91 @@ function isOpen(target) {
 function closeVideo(target) {
     target.classList.remove('open');
 }
-
 function openVideo(target) {
     target.classList.add('open');
 }
 
-const videoElement = document.querySelector('.driver-block__camera');
-videoElement.addEventListener('mousedown', e => {
-    const video = e.target;
-    const videoId = video.id;
-    console.log(videoId);
-    // console.log(video);
-    // const video = videoElement;
-    console.log(video);
-    if (isOpen(video)) {
-        closeVideo(video);
-        console.log('video is closed');
-    } else {
-        socket.emit('ask video', {url: 'url', 'video_id': videoId});
-        openVideo(video);
-        console.log('video is opened');
-    }
+const videoElements = document.querySelectorAll('.driver-block__camera');
+Array.from(videoElements).forEach(videoElement => {
+    handle_video_clicks(videoElement);
 });
-socket.on('response frame', frame => {
-    console.log('display video: ', frame);
-    // const videoElement = frame.video_element;
-    const videoId = frame.video_id;
-    const videoElement = document.getElementById(videoId);
-    if (isOpen(videoElement)) {
-        console.log('asking vide ...');
-        socket.emit('ask video', {url: 'url', 'video_id': videoId});
+
+function handle_video_clicks(videoElement) {
+    videoElement.addEventListener('mousedown', e => {
+        const video = e.target;
+        const videoPath = video.id;
+    
+        if (isOpen(video)) {
+            closeVideo(video);
+            socket.emit('stop video', {'video_path': videoPath});
+        } else {
+            console.log('ask video ...');
+            socket.emit('ask video', {'video_path': videoPath, 'is_open': true});
+            openVideo(video);
+        }
+    });
+}
+
+function putFrameInHtml(arrayBufferFrame, videoElement) {
+    const blob = getBlobFromArrayBuffer(arrayBufferFrame);
+    const reader = new FileReader();
+    reader.onload = function () {
+        const dataURL = reader.result;
+        videoElement.src = dataURL;
+    };
+    reader.readAsDataURL(blob);
+}
+
+function getBlobFromArrayBuffer(frame) {
+    const frameArray = new Uint8Array(frame);
+    return new Blob([frameArray], { type: 'image/jpeg' });
+}
+
+const distracted_classes = [
+    "нормальне водіння",
+    "користування телефоном",
+    "користування телефоном",
+    "користування телефоном",
+    "користування телефоном",
+    "користування радіо",
+    "випивання",
+    "обертання назад",
+]
+const NORMAL_DRIVING_CLASS = 0
+
+function appendMessage(messagesElement, predictions_date, predictions) {
+    const p = document.createElement('p');
+    let stringMessage = `> ${predictions_date}: `;
+
+    if (predictions[0].distracted_class === NORMAL_DRIVING_CLASS) {
+        stringMessage += distracted_classes[NORMAL_DRIVING_CLASS];
+        p.classList.add('normal');
+    } else {
+        stringMessage += createErrorMessage(predictions);
+        p.classList.add('error');
     }
+    p.innerText = stringMessage;
+    messagesElement.append(p);
+}
+
+function createErrorMessage(predictions) {
+    let message = `Відволікання: ймовірність ${predictions[0].probability}`
+                + `- ${distracted_classes[predictions[0].distracted_class]}`;
+    if (predictions.length > 1) {
+        message += `, ${predictions[1].probability} - ${distracted_classes[predictions[1].distracted_class]}`;
+    }
+    return message;
+}
+
+socket.on('response video', data => {
+    console.log('display video: ', data);
+    const videoPath = data.video_path;
+    const videoElement = document.getElementById(videoPath);
+    putFrameInHtml(data.frame, videoElement);
+    const parentDiv = videoElement.closest('.driver-block');
+    const messagesElement = parentDiv.querySelector('.driver-block__messages');
+    appendMessage(messagesElement, data.predictions_date, data.predictions);
+    
+
+
 })

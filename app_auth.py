@@ -4,6 +4,8 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 import os
 import base64
 import json
+import time
+import datetime
 
 import cv2
 import os
@@ -259,17 +261,80 @@ def test():
     print('in test!!')
     return {"name": "test"}
 
+# @socketio.on('ask video')
+# def handle_asking_video(data):
+#     print('handle aking video: ', data)
+#     # socketio.emit('response frame', {'frame': 'some frame', 'video_element': data.video_element})
+#     socketio.emit('response frame', {'frame': 'some frame', 'video_id': data['video_id']})
+video_states = {}
+
+def get_predictions_output(probabilities):
+    sorted_probabilities = sorted(probabilities, reverse=True)
+    predictions = []
+
+    first_max = sorted_probabilities[0]
+    second_max = sorted_probabilities[1]
+
+    predictions.append({ 'distracted_class': probabilities.index(first_max), 'probability': first_max })
+    if (first_max - second_max < 0.35):
+        predictions.append({'distracted_class': probabilities.index(second_max), 'probability': second_max })
+    return predictions
+
+
 @socketio.on('ask video')
 def handle_asking_video(data):
-    print('handle aking video: ', data)
-    # socketio.emit('response frame', {'frame': 'some frame', 'video_element': data.video_element})
-    socketio.emit('response frame', {'frame': 'some frame', 'video_id': data['video_id']})
+    video_path = f"static/{data['video_path']}"
+    cap = cv2.VideoCapture(video_path)
+    print('in handle_asking_video(): ', video_path)
+    # video_states[video_path] = data['is_open']
+    video_states[video_path] = True
+    while video_states[video_path]:
+        ret, frame = cap.read()
+        time.sleep(3)
+        print('read frame')
+        print('video states', video_states)
+        if not ret:
+            print('Can not read the video')
+            break
 
+        try:
+            clean_frame = frame
 
-# @socketio.on('connect')
-# def handle_connect(data):
-#     print('Socketio: connect: ' + data)
-#     socketio.emit('my response', {'data': 'Connected'})
+            pixels = np.asarray(clean_frame)
+            im = Image.fromarray(pixels)
+            # roi = cv2.resize(fr, (400, 400))
+            im = transform(im)
+            im = im.unsqueeze(0)
+            output = model_resnet(im.to('cpu'))
+            proba = nn.Softmax(dim=1)(output)
+            proba = [round(float(elem),4) for elem in proba[0]]
+
+            pred = class_dict_new[proba.index(max(proba))]
+            predictions_output = get_predictions_output(proba)
+            current_datetime = datetime.datetime.now()
+            predictions_date = current_datetime.strftime("[%y.%m.%d: %H:%M:%S]")
+
+            cv2.putText(frame, pred, (50, 50), font, 1, (0 ,0, 255), 1)
+            cv2.putText(frame, str(max(proba)), (50, 100), font, 1, (0 ,0, 255), 1)
+
+            ret, buffer = cv2.imencode('.jpg', frame)
+            if ret:
+                frame = buffer.tobytes()
+                socketio.emit('response video', {
+                    'frame': frame,
+                    'video_path': data['video_path'],
+                    'predictions': predictions_output,
+                    'predictions_date': predictions_date
+                })
+        except Exception as e:
+            print('Exeption while responsing video: ', e)
+            pass
+@socketio.on('stop video')
+def handle_stoping_video(data):
+    print('handle_stoping_video()')
+
+    video_path = f"static/{data['video_path']}"
+    video_states[video_path] = False
 
 if __name__ == '__main__':
     with app.app_context():
