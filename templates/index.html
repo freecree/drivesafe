@@ -55,7 +55,7 @@
             </div>
             <div class="main__right">
                 {% for driver in drivers %}
-                <div class="driver-block main__driver-block">
+                <div id="{{driver['folder_id']}}" class="driver-block main__driver-block">
                     <h2 class="driver-block__driver-name">
                         {{ driver['name'] }}
                     </h2>

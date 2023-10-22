@@ -22,13 +22,16 @@ function handle_video_clicks(videoElement) {
     videoElement.addEventListener('mousedown', e => {
         const video = e.target;
         const videoPath = video.id;
+        const driver_folder = videoElement.closest('.driver-block').id;
     
         if (isOpen(video)) {
             closeVideo(video);
-            socket.emit('stop video', {'video_path': videoPath});
+            socket.emit('stop video', 
+                {'video_path': videoPath, 'driver_folder': driver_folder});
         } else {
             console.log('ask video ...');
-            socket.emit('ask video', {'video_path': videoPath, 'is_open': true});
+            socket.emit('ask video', {'video_path': videoPath,
+                'is_open': true, 'driver_folder': driver_folder});
             openVideo(video);
         }
     });
@@ -92,7 +95,9 @@ socket.on('response video', data => {
     putFrameInHtml(data.frame, videoElement);
     const parentDiv = videoElement.closest('.driver-block');
     const messagesElement = parentDiv.querySelector('.driver-block__messages');
-    appendMessage(messagesElement, data.predictions_date, data.predictions);
+    if (data.predictions) {
+        appendMessage(messagesElement, data.predictions_date, data.predictions);
+    }
     
 
 

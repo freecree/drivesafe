@@ -8,7 +8,6 @@ import time
 import datetime
 
 import cv2
-import os
 from tqdm import tqdm
 import random
 from ultralytics import YOLO
@@ -28,7 +27,7 @@ from flask_socketio import SocketIO
 
 # Set your credentials JSON file path
 CREDENTIALS_JSON_FILE = 'distracted_creds.json'
-FOLDER_ID = '11qHfwdlJBcRgeFS09qkNP36iO5-YN1V6'
+FOLDER_ID = '1fMCWStl4xy12clcR9pNfXEKP-y9yPgFX'
 
 creds = service_account.Credentials.from_service_account_file(CREDENTIALS_JSON_FILE, scopes=['https://www.googleapis.com/auth/drive'])
 service = build('drive', 'v3', credentials=creds)
@@ -86,12 +85,31 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
 
+class Driver(db.Model):
+    __tablename__ = 'drivers'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), unique=True, nullable=False)
+    folder_id = db.Column(db.String(80), unique=True, nullable=False)
+    # distraction = db.Column(db.String(80),nullable=True)
+
+class Distraction(db.Model):
+    __tablename__ = 'distractions'
+    id = db.Column(db.Integer, primary_key=True)
+    driver_folder = db.Column(db.Integer, db.ForeignKey('drivers.folder_id'), nullable=False)
+    date = db.Column(db.String(80), nullable=False)
+    distracted_class = db.Column(db.String(80), nullable=False)
+
+# distractions = db.relationship('Distraction', backref='driver', lazy=True)
+# driver = db.relationship('Driver', back_populates='distractions')
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-
 video_folder = "static"
+
+# def list_google_folder():
+
 
 # List folders within the specified folder
 def list_folders(folder_id=FOLDER_ID):
@@ -109,6 +127,7 @@ def list_folders(folder_id=FOLDER_ID):
     else:
         print("No folders found in the specified folder.")
     return folders_data
+
 
 def list_videos(folder_id):
     # List videos in the specified Google Drive folder
@@ -155,6 +174,8 @@ def load_video(video_path):
     # Render the video page template with the video path
     return render_template('video_page.html', video_path=video_path)
 
+
+
 # Route for streaming video to the web browser
 @app.route('/video_feed/<video_path>', methods=['GET',' POST'])
 def video_feed(video_path):
@@ -162,17 +183,25 @@ def video_feed(video_path):
     video_name = f'videos/{video_path}'
     return render_template('video_page.html', video_name=video_path)
 
-@app.route('/video_ml/<video_name>')
-def video_ml(video_name):
-    full_video_path = f'static/{video_name}'
-    return Response(process_video(full_video_path),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
+def add_drivers_if_not_exist(drivers_to_add):
+    existing_driver_folders = [driver.folder_id for driver in Driver.query.all()]
+    for driver in drivers_to_add:
+        if (driver['folder_id'] not in existing_driver_folders):
+            new_driver = Driver(folder_id=driver['folder_id'], name=driver['name'])
+            db.session.add(new_driver)
+    db.session.commit()
+
+# def add_distraction():
+
 
 @app.route('/video')
 def video():
+    print('In /video route17')
     drivers = get_drivers()
-    return render_template("index.html", drivers=drivers)
+    add_drivers_if_not_exist(drivers)
 
+    print('driver1 added to db')
+    return render_template("index.html", drivers=drivers)
 
 
 @app.route('/video_driver/<id>')
@@ -219,12 +248,41 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html')
 
-@app.route('/test', methods=['GET'])
-def test():
-    print('in test!!')
-    return {"name": "test"}
-
 video_states = {}
+
+PREDICTIONS_TEMP_SIZE = 10
+temp_predictions = {
+    'last_all': [],
+    'last_summarise': 0,
+    'last_pred_time': datetime.datetime.now()
+}
+
+def form_clever_predicts(driver_id, probabilities):
+    if (temp_predictions['last_all'] >= PREDICTIONS_TEMP_SIZE):
+        result_predicts = form_summarise_predicts(probabilities)
+        clean_temp_predicts()
+    set_last_predictions(driver_id, probabilities)
+
+def form_summarise_predicts():
+    sorted_predicts = temp_predictions
+    return [{'predict_class': 1, 'predict_probability': 1}]
+    
+def clean_temp_predicts(): 
+    temp_predictions['last_all'] = []
+
+def set_last_predictions(driver_id, probabilities, general_prediction):
+    pred_prob = max(probabilities)
+    pred_class = probabilities.index(pred_prob)
+    temp_predictions[driver_id].temp.append({
+        'prediction_probability': pred_prob,
+        'prediction_class': pred_class,
+    })
+    if (general_prediction):
+        temp_predictions[driver_id].last_general = general_prediction
+    # driver_last_predictions[driver_id].
+
+#def get_result_predictions:
+
 
 def get_predictions_output(probabilities):
     sorted_probabilities = sorted(probabilities, reverse=True)
@@ -238,19 +296,34 @@ def get_predictions_output(probabilities):
         predictions.append({'distracted_class': probabilities.index(second_max), 'probability': second_max })
     return predictions
 
+# def get_summarise_predictions()
+
+#
+
+
+def form_predict_per_time(proba):
+    comp1 = temp_predictions['last_summarise'] == 0
+    comp2 = proba.index(max(proba)) == 0
+    if (comp2 and comp1):
+        return 0
+    current_datetime = datetime.datetime.now()
+    time_threshold = datetime.timedelta(seconds=2)
+    if (current_datetime - temp_predictions['last_pred_time'] >= time_threshold):
+        print('predict per time')
+        temp_predictions['last_pred_time'] = current_datetime
+        temp_predictions['last_summarise'] = proba.index(max(proba))
+        return get_predictions_output(proba)
+    return 0
 
 @socketio.on('ask video')
 def handle_asking_video(data):
     video_path = f"static/{data['video_path']}"
     cap = cv2.VideoCapture(video_path)
-    print('in handle_asking_video(): ', video_path)
-    # video_states[video_path] = data['is_open']
+
     video_states[video_path] = True
     while video_states[video_path]:
         ret, frame = cap.read()
         # time.sleep(3)
-        print('read frame')
-        print('video states', video_states)
         if not ret:
             print('Can not read the video')
             break
@@ -267,13 +340,25 @@ def handle_asking_video(data):
             proba = nn.Softmax(dim=1)(output)
             proba = [round(float(elem),4) for elem in proba[0]]
 
-            pred = class_dict_new[proba.index(max(proba))]
-            predictions_output = get_predictions_output(proba)
+            predictions_output = form_predict_per_time(proba)
+            # predictions_output = 0
+
+            # predictions_output = get_predictions_output(proba)
+
             current_datetime = datetime.datetime.now()
             predictions_date = current_datetime.strftime("[%y.%m.%d: %H:%M:%S]")
 
-            cv2.putText(frame, pred, (50, 50), font, 1, (0 ,0, 255), 1)
-            cv2.putText(frame, str(max(proba)), (50, 100), font, 1, (0 ,0, 255), 1)
+
+            # distraction_record = Distraction(
+            #     driver_folder=data['driver_folder'],
+            #     date=predictions_date,
+            #     distracted_class=proba.index(max(proba))
+            # )
+            # db.session.add(distraction_record)
+            # db.session.commit()
+
+            # cv2.putText(frame, pred, (50, 50), font, 1, (0 ,0, 255), 1)
+            # cv2.putText(frame, str(max(proba)), (50, 100), font, 1, (0 ,0, 255), 1)
 
             ret, buffer = cv2.imencode('.jpg', frame)
             if ret:
@@ -297,8 +382,4 @@ def handle_stoping_video(data):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    # Create and start a thread for capturing video
-    # capture_thread = threading.Thread(target=capture_video)
-    # capture_thread.start()
-    # app.run(debug=True)
-    socketio.run(app)
+    socketio.run(app, debug=True)
