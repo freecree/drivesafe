@@ -98,7 +98,7 @@ class User(UserMixin, db.Model):
 class Driver(db.Model):
     __tablename__ = 'drivers'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), unique=True, nullable=False)
+    name = db.Column(db.String(80), nullable=False)
     folder_id = db.Column(db.String(80), unique=True, nullable=False)
     # distraction = db.Column(db.String(80),nullable=True)
 
@@ -111,6 +111,8 @@ class Distraction(db.Model):
 
 # distractions = db.relationship('Distraction', backref='driver', lazy=True)
 # driver = db.relationship('Driver', back_populates='distractions')
+
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -146,9 +148,11 @@ def list_videos(folder_id):
     list_files = []
     for file in files:
         file_info = service.files().get(fileId=file['id'], fields='thumbnailLink').execute()
-        thumbnail_link = file_info['thumbnailLink']
-
-        list_files.append({"video_path": file['name'], "preview_image": thumbnail_link})
+        if (file_info):
+            thumbnail_link = file_info['thumbnailLink']
+            list_files.append({"video_path": file['name'], "preview_image": thumbnail_link})
+        else:
+            print('file_info is not loaded')
 
     return list_files
 
@@ -171,6 +175,7 @@ def generate_video_previews():
     return video_previews
 
 def get_drivers(): 
+    time.sleep(0.5)
     folders = list_folders(FOLDER_ID)
     drivers = []
     for folder in folders:
@@ -332,6 +337,9 @@ def form_predict_per_time(proba):
         return get_predictions_output(proba)
     return 0
 
+DISTRACTED_PHONE_CLASS = 1
+DISTRACTED_PHONE_GROUPED_CLASSES = [1, 2, 3, 4]
+
 @socketio.on('ask video')
 def handle_asking_video(data):
     video_path = f"static/{data['video_path']}"
@@ -362,10 +370,14 @@ def handle_asking_video(data):
             current_datetime = datetime.datetime.now()
             predictions_date = current_datetime.strftime("[%y.%m.%d: %H:%M:%S]")
 
+            distracted_class = proba.index(max(proba))
+            if distracted_class in DISTRACTED_PHONE_GROUPED_CLASSES:
+                distracted_class = DISTRACTED_PHONE_CLASS
+
             distraction_record = Distraction(
                 driver_folder=data['driver_folder'],
                 date=predictions_date,
-                distracted_class=proba.index(max(proba))
+                distracted_class=distracted_class
             )
             db.session.add(distraction_record)
             db.session.commit()
@@ -391,6 +403,10 @@ def handle_stoping_video(data):
 
     video_path = f"static/{data['video_path']}"
     video_states[video_path] = False
+
+# admin_user = User(username='admin', password='111110')
+# db.session.add(admin_user)
+# db.session.commit()
 
 if __name__ == '__main__':
     with app.app_context():
