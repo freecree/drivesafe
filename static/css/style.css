@@ -172,6 +172,19 @@ body {
     font-weight: 700;
 }
 
+.driver-block__heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.driver-block__report-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    padding-bottom: 2px;
+    border-bottom: 1px solid var(--primary-color);
+}
+
 .driver-block__cameras {
     margin-top: 20px;
     display: flex;
@@ -200,3 +213,44 @@ body {
 .driver-block__messages > .error {
     color: var(--error-color);
 }
+
+
+/* Report */
+
+.report {
+    padding: 20px 0;
+    color: var(--background-dark);
+}
+.report__title {
+    text-align: center;
+    margin-bottom: 20px;
+    color: var(--primary-color);
+}
+.report__distractions {
+    margin: 20px 0;
+}
+.report__distractions-title {
+    margin-bottom: 20px;
+}
+.report__distractions-messages {
+    margin-top: 10px;
+    padding: 10px;
+    color: var(--background-dark);
+    border: 1px solid var(--border-color);
+    font-size: 12px;
+    border-radius: var(--border-radius);
+    max-height: 100px;
+    overflow-y: scroll;
+}
+.report__diagram-title {
+    margin-bottom: 20px;
+}
+.report__diagram-block {
+    /* height: 50vh; */
+}
+.report__diagram {
+    height: auto;
+    width: 100%;
+}
+
+

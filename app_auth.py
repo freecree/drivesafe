@@ -1,5 +1,6 @@
 from flask import Flask, render_template, redirect, url_for, request, flash, Response
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 import os
 import base64
@@ -51,6 +52,15 @@ class_dict_new = {0 : "safe driving",
               5 : "operating the radio",
               6 : "drinking",
               7 : "reaching behind"}
+
+class_dict_ukr = {0 : "нормальне водіння",
+              1 : "користування телефоном",
+              2 : "користування телефоном",
+              3 : "користування телефоном",
+              4 : "користування телефоном",
+              5 : "користування радіо",
+              6 : "випивання",
+              7 : "обертання назад" }
 
 transform = transforms.Compose([transforms.Resize((400, 400)),
                            transforms.RandomRotation(10),
@@ -174,15 +184,6 @@ def load_video(video_path):
     # Render the video page template with the video path
     return render_template('video_page.html', video_path=video_path)
 
-
-
-# Route for streaming video to the web browser
-@app.route('/video_feed/<video_path>', methods=['GET',' POST'])
-def video_feed(video_path):
-    # video_path = request.form.get("name")
-    video_name = f'videos/{video_path}'
-    return render_template('video_page.html', video_name=video_path)
-
 def add_drivers_if_not_exist(drivers_to_add):
     existing_driver_folders = [driver.folder_id for driver in Driver.query.all()]
     for driver in drivers_to_add:
@@ -191,29 +192,50 @@ def add_drivers_if_not_exist(drivers_to_add):
             db.session.add(new_driver)
     db.session.commit()
 
-# def add_distraction():
+NORMAL_DRIVING_CLASS = 0
+
+@app.route('/report/<driver_folder>', methods=['GET',' POST'])
+def report(driver_folder):
+    driver = db.session.query(Driver).filter(Driver.folder_id == driver_folder).first()
+
+    driver_distractions = db.session.query(Distraction) \
+        .filter(Driver.folder_id == driver_folder) \
+        .filter(Distraction.distracted_class != NORMAL_DRIVING_CLASS) \
+        .all()
+    driver_distractions_list = []
+    for distraction in driver_distractions:
+        driver_distractions_list.append({
+            'distracted_class': distraction.distracted_class,
+            'date': distraction.date,
+            'description': class_dict_ukr[int(distraction.distracted_class)],
+        })
+    
+    grouped_distractions = db.session.query(
+        Distraction.distracted_class,
+        func.count(Distraction.distracted_class)) \
+            .filter(Driver.folder_id == driver_folder) \
+            .filter(Distraction.distracted_class != NORMAL_DRIVING_CLASS) \
+            .group_by(Distraction.distracted_class).all()
+
+    grouped_distractions_list = []
+    for distracted_class, count in grouped_distractions: 
+        grouped_distractions_list.append({'distracted_class': distracted_class,
+                       'count': count,
+                       'description': class_dict_ukr[int(distracted_class)]})
+
+    return render_template('report.html',
+                        all_distractions=driver_distractions_list,
+                        grouped_distractions=grouped_distractions_list,
+                        driver_name=driver.name)
 
 
 @app.route('/video')
 def video():
-    print('In /video route17')
     drivers = get_drivers()
     add_drivers_if_not_exist(drivers)
 
     print('driver1 added to db')
     return render_template("index.html", drivers=drivers)
-
-
-@app.route('/video_driver/<id>')
-def video_driver(id):
-    # videos_with_previews = generate_video_previews()
-    videos_with_previews = list_videos(id)
-    folders = list_folders()
-    
-    for folder in folders:
-        if folder['folder_id'] == id:
-            name = folder['folder_name']
-    return render_template("index.html",folders=folders, all_vid=[], driver_name=name, videos=videos_with_previews)
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -296,11 +318,6 @@ def get_predictions_output(probabilities):
         predictions.append({'distracted_class': probabilities.index(second_max), 'probability': second_max })
     return predictions
 
-# def get_summarise_predictions()
-
-#
-
-
 def form_predict_per_time(proba):
     comp1 = temp_predictions['last_summarise'] == 0
     comp2 = proba.index(max(proba)) == 0
@@ -341,21 +358,17 @@ def handle_asking_video(data):
             proba = [round(float(elem),4) for elem in proba[0]]
 
             predictions_output = form_predict_per_time(proba)
-            # predictions_output = 0
-
-            # predictions_output = get_predictions_output(proba)
 
             current_datetime = datetime.datetime.now()
             predictions_date = current_datetime.strftime("[%y.%m.%d: %H:%M:%S]")
 
-
-            # distraction_record = Distraction(
-            #     driver_folder=data['driver_folder'],
-            #     date=predictions_date,
-            #     distracted_class=proba.index(max(proba))
-            # )
-            # db.session.add(distraction_record)
-            # db.session.commit()
+            distraction_record = Distraction(
+                driver_folder=data['driver_folder'],
+                date=predictions_date,
+                distracted_class=proba.index(max(proba))
+            )
+            db.session.add(distraction_record)
+            db.session.commit()
 
             # cv2.putText(frame, pred, (50, 50), font, 1, (0 ,0, 255), 1)
             # cv2.putText(frame, str(max(proba)), (50, 100), font, 1, (0 ,0, 255), 1)

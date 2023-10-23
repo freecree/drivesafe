@@ -45,7 +45,7 @@
                         {% for driver in drivers %}
                         <div class="active-drivers__item">
                             <div class="active-drivers__item-name">
-                                <a href="{{ url_for('video_driver', id=driver['folder_id']) }}"> {{ driver['name'] }}</a>
+                                <a href="#"> {{ driver['name'] }}</a>
                             </div>
                             <div class="active-drivers__item-btn">-</div>
                         </div>
@@ -56,9 +56,12 @@
             <div class="main__right">
                 {% for driver in drivers %}
                 <div id="{{driver['folder_id']}}" class="driver-block main__driver-block">
-                    <h2 class="driver-block__driver-name">
-                        {{ driver['name'] }}
-                    </h2>
+                    <div class="driver-block__heading">
+                        <h2 class="driver-block__driver-name">
+                            {{ driver['name'] }}
+                        </h2>
+                        <a class="driver-block__report-link" href="{{ url_for('report', driver_folder=driver['folder_id']) }}">Отримати звіт</a>
+                    </div>
                     <div class="driver-block__cameras">
                         {% for video in driver['videos'] %}
                         <div class="driver-block__camera">
