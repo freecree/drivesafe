@@ -11,7 +11,7 @@ import datetime
 import cv2
 from tqdm import tqdm
 import random
-from ultralytics import YOLO
+# from ultralytics import YOLO
 
 import numpy as np
 from PIL import Image
