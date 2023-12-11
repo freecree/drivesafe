@@ -25,6 +25,8 @@ from googleapiclient.discovery import build
 from google.oauth2 import service_account
 from flask_socketio import SocketIO
 
+from controllers.AdminController import AdminController
+
 
 # Set your credentials JSON file path
 CREDENTIALS_JSON_FILE = 'distracted_creds.json'
@@ -233,7 +235,6 @@ def report(driver_folder):
                         grouped_distractions=grouped_distractions_list,
                         driver_name=driver.name)
 
-
 @app.route('/video')
 def video():
     drivers = get_drivers()
@@ -243,37 +244,46 @@ def video():
     return render_template("index.html", drivers=drivers)
 
 
-@app.route('/', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        user = User.query.filter_by(username=username).first()
+# @app.route('/', methods=['GET', 'POST'])
+# def login():
+#     if request.method == 'POST':
+#         username = request.form['username']
+#         password = request.form['password']
+#         user = User.query.filter_by(username=username).first()
 
-        if user and user.password == password:
-            login_user(user)
-            return redirect(url_for('video'))
-        else:
-            flash('Login failed. Please check your username and password.')
-    return render_template('login.html')
+#         if user and user.password == password:
+#             login_user(user)
+#             return redirect(url_for('video'))
+#         else:
+#             flash('Login failed. Please check your username and password.')
+#     return render_template('login.html')
 
-@app.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    return redirect(url_for('login'))
+# @app.route('/logout')
+# @login_required
+# def logout():
+#     logout_user()
+#     return redirect(url_for('login'))
 
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        user = User(username=username, password=password)
-        db.session.add(user)
-        db.session.commit()
-        flash('Registration successful. You can now log in.')
-        return redirect(url_for('login'))
-    return render_template('register.html')
+# @app.route('/register', methods=['GET', 'POST'])
+# def register():
+#     if request.method == 'POST':
+#         username = request.form['username']
+#         password = request.form['password']
+#         user = User(username=username, password=password)
+#         db.session.add(user)
+#         db.session.commit()
+#         flash('Registration successful. You can now log in.')
+#         return redirect(url_for('login'))
+#     return render_template('register.html')
+print(AdminController)
+
+admin_controller = AdminController(db)
+# Routes
+app.route('/', methods=['GET', 'POST'])(admin_controller.login)
+app.route('/logout')(admin_controller.logout)
+app.route('/register', methods=['GET', 'POST'])(admin_controller.register)
+
+# Other routes and configurations go here
 
 video_states = {}
 
