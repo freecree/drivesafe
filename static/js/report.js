@@ -15,7 +15,7 @@ function createChart() {
       datasets: [
         {
           label: 'Кількість відволікань',
-          data: chartData.map(item => item.count),
+          data: chartData.map(item => item.count / 20),
           backgroundColor: 'rgba(75, 192, 192, 0.2)', // Customize the chart colors
           borderColor: 'rgba(75, 192, 192, 1)',
           borderWidth: 1,
