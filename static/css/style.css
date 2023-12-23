@@ -101,6 +101,8 @@ body {
 }
 .header__logout {
     cursor: pointer;
+    text-decoration: none;
+    color: inherit;
 }
 
 /* Authorisation */
@@ -127,6 +129,14 @@ body {
 .authorisation__button {
     margin-top: 10px;
     width: 100%;
+}
+
+.notification {
+  padding: 20px;
+  max-width: 300px;
+}
+.authorisation .error {
+  color: var(--error-color);
 }
 
 /* Main */
