@@ -1,17 +1,13 @@
 from extensions import db
 from models.driver import Driver
 from models.distraction import Distraction
-from collections import defaultdict
 
 NORMAL_DRIVING_CLASS = 0
 class_dict_ukr = {0 : "нормальне водіння",
               1 : "користування телефоном",
-              2 : "користування телефоном",
-              3 : "користування телефоном",
-              4 : "користування телефоном",
-              5 : "користування радіо",
-              6 : "споживання напоїв",
-              7 : "відволікання на речі позаду" }
+              2 : "користування радіо",
+              3 : "споживання напоїв",
+              4 : "відволікання на речі позаду" }
 
 class DriverService:
 
@@ -32,20 +28,3 @@ class DriverService:
       .filter(Driver.id == id)
       .filter(Distraction.distracted_class != NORMAL_DRIVING_CLASS)
     ).scalars().all()
-  
-  def group_distractions(distractions):
-    grouped_distractions_dict = defaultdict(list)
-    for distraction in distractions:
-      distracted_class = distraction['distracted_class']
-      grouped_distractions_dict[distracted_class].append(distraction)
-
-    grouped_distractions = [
-      {
-        'distracted_class': distracted_class,
-        'count': len(distractions),
-        'description': class_dict_ukr[int(distracted_class)],
-      }
-      for distracted_class, distractions in grouped_distractions_dict.items()
-    ]
-    return grouped_distractions
-

@@ -31,7 +31,9 @@ def create_app():
     return User.query.get(int(user_id))
 
   socketio.init_app(app)
-  # socketio.run(app, debug=True)
+
+  # with app.app_context():
+  #   db.create_all()
   return app
 
 

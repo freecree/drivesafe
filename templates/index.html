@@ -54,7 +54,7 @@
           <div class="driver-block__cameras">
             {% for video in driver['videos'] %}
             <div class="driver-block__camera">
-              <img id="{{video['video_path']}}" class="preview-image" src="{{ video['preview_image'] }}" alt="Preview">
+              <img id="{{driver['folder_id']+'/'+video['video_path']}}" class="preview-image" src="{{ video['preview_image'] }}" alt="Preview">
             </div>
             {% endfor %}
           </div>

@@ -50,14 +50,8 @@
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        var chartData = {{ grouped_distractions | tojson }};
-        console.log('chartData: ', chartData);
-
-        // var grouped_distractions = {grouped_distractions};
-        // console.log(grouped_distractions);
-        // grouped_distractions.forEach(element => {
-        //     console.log(element);
-        // });
+        var allDistractions = {{ all_distractions | tojson }};
+        console.log('allDistractions: ', allDistractions);
     </script>
     <script src="{{url_for('static', filename='js/report.js')}}"></script>
 

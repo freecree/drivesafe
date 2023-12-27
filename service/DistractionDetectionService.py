@@ -2,66 +2,83 @@ from cnn.ResNetModel import ResNetModel
 import datetime
 from extensions import db
 from models.distraction import Distraction
-
-DISTRACTED_PHONE_CLASS = 1
-DISTRACTED_PHONE_GROUPED_CLASSES = [1, 2, 3, 4]
-PREDICTIONS_TEMP_SIZE = 10
+from service.DistractionService import DistractionService as DistrServ
+NORMAL_DRIVING_CLASS = 0
 
 class DistractionDetectionService:
   def __init__(self):
     self.cnn_model = ResNetModel()
     self.temp_predictions = {
-      'last_all': [],
-      'last_summarise': 0,
+      'last_all': [], # todo: save probabilities by driver
+      'last_summarise': -1,
       'last_pred_time': datetime.datetime.now()
     }
 
   def make_prediction(self, frame, driver_folder):
     proba = self.cnn_model.predict_by_frame(frame)
-
     predictions_output = self.__form_predict_per_time(proba)
+
     current_datetime = datetime.datetime.now()
     predictions_date = current_datetime.strftime("[%y.%m.%d: %H:%M:%S]")
-
-    distracted_class = proba.index(max(proba))
-    if distracted_class in DISTRACTED_PHONE_GROUPED_CLASSES:
-      distracted_class = DISTRACTED_PHONE_CLASS
-    
-    self.save_distraction(driver_folder, predictions_date, distracted_class)
 
     return predictions_output, predictions_date
 
   def __form_predict_per_time(self, proba):
-    comp1 = self.temp_predictions['last_summarise'] == 0
-    comp2 = proba.index(max(proba)) == 0
-    if (comp2 and comp1):
-        return 0
-    current_datetime = datetime.datetime.now()
-    time_threshold = datetime.timedelta(seconds=2)
-    if (current_datetime - self.temp_predictions['last_pred_time'] >= time_threshold):
-      self.temp_predictions['last_pred_time'] = current_datetime
-      self.temp_predictions['last_summarise'] = proba.index(max(proba))
-      return self.__get_predictions_output(proba)
-    return 0
+    two_max_pred = self.__get_two_max_pred(proba)
+    print(f'two_max_pred: {two_max_pred}')
+    if (self.__is_normal_driving_twice_in_row(two_max_pred[0]['predicted_class'])):
+      return 0
 
-  def __get_predictions_output(self, probabilities):
-    sorted_probabilities = sorted(probabilities, reverse=True)
+    if (self.__is_time_interval()):
+      self.temp_predictions['last_pred_time'] = datetime.datetime.now()
+      self.temp_predictions['last_summarise'] = two_max_pred[0]['predicted_class']
+      return two_max_pred
+    return 0
+  
+  def __get_two_max_pred(self, proba):
+    sorted_proba = sorted(proba, reverse=True)
     predictions = []
 
-    first_max = sorted_probabilities[0]
-    second_max = sorted_probabilities[1]
+    first_max = sorted_proba[0]
+    second_max = sorted_proba[1]
+    # print(f'first_max: {first_max} second_max: {second_max} proba: {proba}')
+    first_class = self.__to_predicted_class(proba.index(first_max))
+    second_class = self.__to_predicted_class(proba.index(second_max))
 
-    predictions.append({ 'distracted_class': probabilities.index(first_max), 'probability': first_max })
-    if (first_max - second_max < 0.35):
-      predictions.append({'distracted_class': probabilities.index(second_max), 'probability': second_max })
+    # print(f'first_class: {first_class} second_class: {second_class} index1: {proba.index(first_max)} index2: {proba.index(first_max)}')
+    predictions.append({'predicted_class': first_class, 'probability': first_max })
+    print(f'proba: {proba}')
+
+    if (self.__is_low_proba(first_max, second_max)
+    and DistrServ.is_distraction(second_class) 
+    and first_class != second_class):
+      predictions.append({'predicted_class': second_class, 'probability': second_max })
+
     return predictions
   
-  def save_distraction(self, driver_folder, predictions_date, distracted_class):
-    distraction_record = Distraction(
-      driver_folder=driver_folder,
-      date=predictions_date,
-      distracted_class=distracted_class
-    )
-    db.session.add(distraction_record)
-    db.session.commit()
+  def __is_low_proba(self, first_predict, second_predict):
+    return (first_predict - second_predict) < 0.35
+
+  def __is_time_interval(self):
+    current_time = datetime.datetime.now()
+    time_threshold = datetime.timedelta(seconds=3)
+    return current_time - self.temp_predictions['last_pred_time'] >= time_threshold
+  
+  def __is_normal_driving_twice_in_row(self, current_pred):
+    last_pred = self.temp_predictions['last_summarise']
+    return DistrServ.is_normal_driving(last_pred) and DistrServ.is_normal_driving(current_pred)
+
+  def __to_predicted_class(self, model_class):
+    mapping = {
+        0: [0],          # Normal
+        1: [1, 2, 3, 4], # Phone
+        2: [5],          # Radio
+        3: [6],          # Drinking
+        4: [7],          # Reaching behind
+    }
+    for key, values in mapping.items():
+      if model_class in values:
+        return key
+    return -1
+
 

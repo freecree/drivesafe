@@ -23,13 +23,11 @@ def report(driver_folder):
     {
       'distracted_class': distraction.distracted_class,
       'date': distraction.date,
-      'description': class_dict_ukr[int(distraction.distracted_class)],
+      'description': class_dict_ukr.get(int(distraction.distracted_class), 'default'),
     }
     for distraction in driver_distractions
   ]
-  grouped_distractions = DriverService.group_distractions(driver_distractions_list)
 
   return render_template('report.html',
                       all_distractions=driver_distractions_list,
-                      grouped_distractions=grouped_distractions,
                       driver_name=driver.name)
