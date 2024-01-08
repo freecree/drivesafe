@@ -1,74 +1,59 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Звіт</title>
-    <link rel="stylesheet"  type="text/css" href="{{url_for('static', filename='css/style.css')}}">
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/icon?family=Material+Icons"
-    />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
-</head>
-<body>
-    <header class="header">
-        <div class="container">
-            <div class="header__inner">
-                <div class="header__left">
-                    <div class="logo header__logo">
-                      <a href="{{ url_for('video') }}">
-                        <img src="{{url_for('static', filename='images/logo.svg')}}" width="50px" height="50px" alt="Drive safe" class="logo__img" />
-                      </a>
-                        <p class="logo__txt drivesafe">DriveSafe</p>
-                    </div>
-                    <div class="header__title">
-                        Адміністративна панель
-                    </div>
-                </div>
-                <div class="header__right">
-                    <div class="header__logout">
-                        Вийти
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
-    <section class="report">
-        <div class="container">
-            <h2 class="report__title">{{driver_name}}</h2>
-            <div class="report__distractions">
-                <h3 class="report__distractions-title">
-                    Усі відволікання
-                </h3>
-                <div class="report__distractions-messages">
-                    {% for distraction in all_distractions %}
-                    <p class="report__distraction">{{distraction['date']}}
-                        {{distraction['distracted_class']}}
-                        {{distraction['description']}}</p>
-                    {% endfor %}
-                </div>
-            </div>
-            <div class="report__diagram-wrapper">
-                <h3 class="report__diagram-title">Кількість відволікань за класами в хвилину</h3>
-                <div class="report__diagram-block">
-                    <canvas class="report__diagram" id="myChart" ></canvas>
-                </div>
-            </div>
-        </div>
-    </section>
-    
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        var chartData = {{ grouped_distractions | tojson }};
-        console.log(chartData);
 
-        // var grouped_distractions = {grouped_distractions};
-        // console.log(grouped_distractions);
-        // grouped_distractions.forEach(element => {
-        //     console.log(element);
-        // });
-    </script>
-    <script src="{{url_for('static', filename='js/report.js')}}"></script>
-</body>
-</html>
+  {% extends "base.html" %}
+
+  {% block content %}
+  <header class="header">
+    <div class="container">
+      <div class="header__inner">
+        <div class="header__left">
+          <div class="logo header__logo">
+            <a href="{{ url_for('main.main') }}">
+              <img src="{{url_for('static', filename='images/logo.svg')}}" width="50px" height="50px" alt="Drive safe" class="logo__img" />
+            </a>
+              <p class="logo__txt drivesafe">DriveSafe</p>
+          </div>
+          <div class="header__title">
+            Адміністративна панель
+          </div>
+        </div>
+        <div class="header__right">
+          <a href="{{url_for('auth.logout')}}" class="header__logout">
+            Вийти
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+  <section class="report">
+    <div class="container">
+      <h2 class="report__title">{{driver.name}}</h2>
+      <div class="report__distractions">
+        <h3 class="report__distractions-title">
+          Усі відволікання
+        </h3>
+        <div class="report__distractions-messages">
+          {% for distraction in all_distractions %}
+          <p class="report__distraction">{{distraction['date']}}
+            {{distraction['distracted_class']}}
+            {{distraction['description']}}</p>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="report__diagram-wrapper">
+        <h3 class="report__diagram-title">Кількість відволікань за класами в хвилину</h3>
+        <div class="report__diagram-block">
+          <canvas class="report__diagram" id="myChart" ></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const allDistractions = {{ all_distractions | tojson }};
+    const drivingTimeMin = {{driver.driving_time}} / 60;
+    console.log('allDistractions: ', allDistractions);
+  </script>
+  <script src="{{url_for('static', filename='js/report.js')}}"></script>
+
+  {% endblock %}

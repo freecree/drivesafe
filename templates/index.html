@@ -1,82 +1,69 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Video Previews</title>
-    <link rel="stylesheet"  type="text/css" href="{{url_for('static', filename='css/style.css')}}">
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/icon?family=Material+Icons"
-    />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
-</head>
-<body>
-    <header class="header">
-        <div class="container">
-            <div class="header__inner">
-                <div class="header__left">
-                    <div class="logo header__logo">
-                      <a href="{{ url_for('video') }}">
-                        <img src="{{url_for('static', filename='images/logo.svg')}}" width="50px" height="50px" alt="Drive safe" class="logo__img" />
-                      </a>
-                        <p class="logo__txt drivesafe">DriveSafe</p>
-                    </div>
-                    <div class="header__title">
-                        Адміністративна панель
-                    </div>
-                </div>
-                <div class="header__right">
-                    <div class="header__logout">
-                        Вийти
-                    </div>
-                </div>
-            </div>
+  {% extends "base.html" %}
+  {% block content %}
+  <header class="header">
+    <div class="container">
+      <div class="header__inner">
+        <div class="header__left">
+          <div class="logo header__logo">
+            <a href="{{ url_for('main.main') }}">
+              <img src="{{url_for('static', filename='images/logo.svg')}}" width="50px" height="50px" alt="Drive safe" class="logo__img" />
+            </a>
+              <p class="logo__txt drivesafe">DriveSafe</p>
+          </div>
+          <div class="header__title">
+            Адміністративна панель
+          </div>
         </div>
-    </header>
-    <section class="main">
-        <div class="main-wrapper">
-            <div class="main__left">
-                <div class="active-drivers">
-                    <h2 class="active-drivers__title">
-                        Активні водії
-                    </h2>
-                    <div class="active-drivers__wrapper">
-                        {% for driver in drivers %}
-                        <div class="active-drivers__item">
-                            <div class="active-drivers__item-name">
-                                <a href="#"> {{ driver['name'] }}</a>
-                            </div>
-                            <div style="visibility: hidden;" class="active-drivers__item-btn">-</div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-            <div class="main__right">
-                {% for driver in drivers %}
-                <div id="{{driver['folder_id']}}" class="driver-block main__driver-block">
-                    <div class="driver-block__heading">
-                        <h2 class="driver-block__driver-name">
-                            {{ driver['name'] }}
-                        </h2>
-                        <a class="driver-block__report-link" href="{{ url_for('report', driver_folder=driver['folder_id']) }}">Отримати звіт</a>
-                    </div>
-                    <div class="driver-block__cameras">
-                        {% for video in driver['videos'] %}
-                        <div class="driver-block__camera">
-                            <img id="{{video['video_path']}}" class="preview-image" src="{{ video['preview_image'] }}" alt="Preview">
-                        </div>
-                        {% endfor %}
-                    </div>
-                    <div class="driver-block__messages"></div>
-                {% endfor %}
-            </div>
+        <div class="header__right">
+          <a href="{{url_for('auth.logout')}}" class="header__logout">
+            Вийти
+          </a>
         </div>
-    </section>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
-    <script src="{{url_for('static', filename='js/main.js')}}"></script>
-</body>
-</html>
+      </div>
+    </div>
+  </header>
+
+  <section class="main">
+    <div class="main-wrapper">
+      <div class="main__left">
+        <div class="active-drivers">
+          <h2 class="active-drivers__title">
+              Активні водії
+          </h2>
+          <div class="active-drivers__wrapper">
+            {% for driver in drivers %}
+            <div class="active-drivers__item">
+              <div class="active-drivers__item-name">
+                <a href="#"> {{ driver['name'] }}</a>
+              </div>
+              <div style="visibility: hidden;" class="active-drivers__item-btn">-</div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      <div class="main__right">
+        {% for driver in drivers %}
+        <div id="{{driver['folder_id']}}" class="driver-block main__driver-block">
+          <div class="driver-block__heading">
+            <h2 class="driver-block__driver-name">
+                {{ driver['name'] }}
+            </h2>
+            <a class="driver-block__report-link" href="{{ url_for('main.report', driver_folder=driver['folder_id']) }}">Отримати звіт</a>
+          </div>
+          <div class="driver-block__cameras">
+            {% for video in driver['videos'] %}
+            <div class="driver-block__camera">
+              <img id="{{driver['folder_id']+'/'+video['video_path']}}" class="preview-image" src="{{ video['preview_image'] }}" alt="Preview">
+            </div>
+            {% endfor %}
+          </div>
+          <div class="driver-block__messages"></div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+  <script src="{{url_for('static', filename='js/main.js')}}"></script>
+{% endblock %}
 
