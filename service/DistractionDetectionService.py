@@ -1,8 +1,8 @@
 from cnn.ResNetModel import ResNetModel
 import datetime
 from extensions import db
-from models.distraction import Distraction
 from service.DistractionService import DistractionService as DistrServ
+
 NORMAL_DRIVING_CLASS = 0
 
 class DistractionDetectionService:
@@ -25,7 +25,6 @@ class DistractionDetectionService:
 
   def __form_predict_per_time(self, proba):
     two_max_pred = self.__get_two_max_pred(proba)
-    print(f'two_max_pred: {two_max_pred}')
     if (self.__is_normal_driving_twice_in_row(two_max_pred[0]['predicted_class'])):
       return 0
 
@@ -41,13 +40,11 @@ class DistractionDetectionService:
 
     first_max = sorted_proba[0]
     second_max = sorted_proba[1]
-    # print(f'first_max: {first_max} second_max: {second_max} proba: {proba}')
+
     first_class = self.__to_predicted_class(proba.index(first_max))
     second_class = self.__to_predicted_class(proba.index(second_max))
 
-    # print(f'first_class: {first_class} second_class: {second_class} index1: {proba.index(first_max)} index2: {proba.index(first_max)}')
     predictions.append({'predicted_class': first_class, 'probability': first_max })
-    print(f'proba: {proba}')
 
     if (self.__is_low_proba(first_max, second_max)
     and DistrServ.is_distraction(second_class) 

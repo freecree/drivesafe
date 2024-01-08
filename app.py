@@ -3,8 +3,10 @@ from flask import Flask
 from flask_login import LoginManager
 from flask_socketio import SocketIO
 from extensions import db
+from controllers.VideoController import VideoController
 
 socketio = SocketIO()
+video_controller = VideoController()
 
 def create_app():
   app = Flask(__name__)
@@ -31,14 +33,4 @@ def create_app():
     return User.query.get(int(user_id))
 
   socketio.init_app(app)
-
-  # with app.app_context():
-  #   db.create_all()
   return app
-
-
-# if __name__ == '__main__':
-#   app = create_app()
-
-#   socketio.run(app, debug=True)
-

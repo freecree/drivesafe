@@ -24,35 +24,36 @@
       </div>
     </div>
   </header>
-    <section class="report">
-        <div class="container">
-            <h2 class="report__title">{{driver_name}}</h2>
-            <div class="report__distractions">
-                <h3 class="report__distractions-title">
-                    Усі відволікання
-                </h3>
-                <div class="report__distractions-messages">
-                    {% for distraction in all_distractions %}
-                    <p class="report__distraction">{{distraction['date']}}
-                        {{distraction['distracted_class']}}
-                        {{distraction['description']}}</p>
-                    {% endfor %}
-                </div>
-            </div>
-            <div class="report__diagram-wrapper">
-                <h3 class="report__diagram-title">Кількість відволікань за класами</h3>
-                <div class="report__diagram-block">
-                    <canvas class="report__diagram" id="myChart" ></canvas>
-                </div>
-            </div>
+  <section class="report">
+    <div class="container">
+      <h2 class="report__title">{{driver.name}}</h2>
+      <div class="report__distractions">
+        <h3 class="report__distractions-title">
+          Усі відволікання
+        </h3>
+        <div class="report__distractions-messages">
+          {% for distraction in all_distractions %}
+          <p class="report__distraction">{{distraction['date']}}
+            {{distraction['distracted_class']}}
+            {{distraction['description']}}</p>
+          {% endfor %}
         </div>
-    </section>
-    
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        var allDistractions = {{ all_distractions | tojson }};
-        console.log('allDistractions: ', allDistractions);
-    </script>
-    <script src="{{url_for('static', filename='js/report.js')}}"></script>
+      </div>
+      <div class="report__diagram-wrapper">
+        <h3 class="report__diagram-title">Кількість відволікань за класами в хвилину</h3>
+        <div class="report__diagram-block">
+          <canvas class="report__diagram" id="myChart" ></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const allDistractions = {{ all_distractions | tojson }};
+    const drivingTimeMin = {{driver.driving_time}} / 60;
+    console.log('allDistractions: ', allDistractions);
+  </script>
+  <script src="{{url_for('static', filename='js/report.js')}}"></script>
 
   {% endblock %}

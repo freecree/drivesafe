@@ -5,12 +5,15 @@ from flask_login import login_required
 from service.google_drive_service import get_drivers
 from service.DriverService import DriverService, class_dict_ukr
 
+from app import video_controller
+
 
 @bp.route('/video', methods=['GET', 'POST'])
 @login_required
 def main():
   drivers = get_drivers()
   DriverService.add_drivers_if_not_exist(drivers)
+  video_controller.init()
   return render_template('index.html', drivers=drivers)
 
 
@@ -30,4 +33,4 @@ def report(driver_folder):
 
   return render_template('report.html',
                       all_distractions=driver_distractions_list,
-                      driver_name=driver.name)
+                      driver=driver)

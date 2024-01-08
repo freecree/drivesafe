@@ -28,3 +28,11 @@ class DriverService:
       .filter(Driver.id == id)
       .filter(Distraction.distracted_class != NORMAL_DRIVING_CLASS)
     ).scalars().all()
+  
+  def increase_driving_time_by_folder(driver_folder, time_duration):
+    driver = DriverService.get_driver_by_folder(driver_folder)
+
+    driver.driving_time += time_duration
+    db.session.commit()
+
+    print('dr time increment')
